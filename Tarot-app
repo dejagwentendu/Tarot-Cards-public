@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mystical Tarot Deck</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@200;300;400;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: linear-gradient(135deg, #1a0f2e, #0f0a1a);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            overflow-y: auto;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .title {
+            font-family: 'Playfair Display', serif;
+            color: #f5f5dc;
+            font-size: 59px;
+            margin-bottom: 15px;
+            font-weight: 200;
+            letter-spacing: -1px;
+            line-height: 1.1;
+        }
+
+        .subtitle {
+            color: #f5f5dc;
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        .instructions {
+            color: #e6ddd4;
+            font-size: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+            font-weight: 300;
+        }
+
+        .deck-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            width: 100%;
+            overflow: visible;
+            margin-bottom: 40px;
+        }
+
+        .deck {
+            display: flex;
+            padding: 90px 40px 60px 40px;
+            overflow-x: auto;
+            overflow-y: visible;
+            width: 100%;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            border-radius: 15px;
+            background: rgba(15, 10, 26, 0.2);
+        }
+
+        .deck::-webkit-scrollbar { display: none; }
+
+        .card {
+            width: 120px;
+            height: 180px;
+            background: #1a0f2e;
+            border: 2px solid #d4af37;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            margin-right: -95px;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .card:hover {
+            transform: translateY(-5px) rotate(var(--rotation));
+        }
+
+        .card.selected {
+            transform: translateY(-60px) rotate(var(--rotation)) !important;
+        }
+
+        .card.shuffling {
+            transition: all 1s ease-in-out;
+        }
+
+        .card.stacked {
+            transform: translateX(0) translateY(0) rotate(0deg) !important;
+            margin-right: -120px !important;
+        }
+
+        .card.spreading {
+            transition: all 1.5s ease-out;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            background: linear-gradient(45deg, #0f0a1a, #1a0f2e);
+            border-radius: 8px;
+            border: 1px solid #b8860b;
+        }
+
+        .card::after {
+            content: '✦';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffd700;
+            font-size: 24px;
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 30px;
+            margin-bottom: 50px;
+            position: relative;
+            z-index: 9999;
+            white-space: nowrap;
+        }
+
+        .deck-instructions {
+            text-align: center;
+            color: #ffd700;
+            font-size: 14px;
+            font-weight: 300;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: #f8f8dc;
+            color: #2a1f3d;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: transform 0.3s ease;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Celtic Cross Spread Styles */
+        .celtic-cross-container {
+            width: 100%;
+            max-width: 750px;
+            margin: 40px auto 10px auto;
+            position: relative;
+            height: 650px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 40px;
+            background: rgba(15, 10, 26, 0.4);
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            border-radius: 15px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            
+            /* Hide scrollbar but allow scrolling */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .celtic-cross-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .celtic-position {
+            position: absolute;
+            width: 75px;
+            height: 112px;
+            background: rgba(26, 15, 46, 0.6);
+            border: 2px solid #d4af37;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .celtic-position::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            background: linear-gradient(45deg, #0f0a1a, #1a0f2e);
+            border-radius: 8px;
+            border: 1px solid #b8860b;
+        }
+
+        .position-name {
+            position: relative;
+            color: #ffd700;
+            font-size: 8px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.1;
+            z-index: 1;
+            padding: 2px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Celtic Cross specific positions */
+        .position-1 { left: 100px; top: 150px; } /* Present - center */
+        .position-2 { left: 100px; top: 225px; transform: rotate(90deg); } /* Obstacles - horizontal across center */
+        .position-3 { left: 100px; top: 13px; } /* Crown - top */
+        .position-4 { left: 100px; top: 340px; } /* Root - bottom */
+        .position-5 { left: 0px; top: 150px; } /* Recent Past - left */
+        .position-6 { left: 200px; top: 150px; } /* Near Future - right */
+        .position-7 { left: 290px; top: 358px; } /* Your Approach - bottom right */
+        .position-8 { left: 290px; top: 243px; } /* Internal - middle right */
+        .position-9 { left: 290px; top: 128px; } /* External - upper right */
+        .position-10 { left: 290px; top: 13px; } /* Final Outcome - top right */
+
+        .card.in-spread {
+            position: absolute;
+            width: 75px;
+            height: 112px;
+            margin-right: 0;
+            z-index: 10;
+            transition: none;
+            background: #f5f5dc;
+            border: 2px solid #d4af37;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+        }
+
+        .card.in-spread::before {
+            display: none;
+        }
+
+        .card.in-spread::after {
+            display: none;
+        }
+
+        .card.in-spread .card-name {
+            color: #1a0f2e;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.1;
+            word-wrap: break-word;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .reading-container {
+            max-width: 800px;
+            margin: -160px auto;
+            padding: 30px 10px;
+            border-radius: 15px;
+            display: none;
+        }
+
+        .reading-title {
+            color: #ffd700;
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 400;
+        }
+
+        .reading-text {
+            color: #f5f5dc;
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            text-align: justify;
+            overflow: hidden;
+        }
+
+        .reading-text::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        .reading-text:last-child {
+            margin-bottom: 0;
+        }
+
+        .card-bold {
+            font-weight: bold;
+            color: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1 class="title">Celtic Cross Tarot Spread</h1>
+            <div style="color: #ffd700; font-size: 24px; margin-bottom: 20px;">◆</div>
+            <p class="subtitle">Reveal your truth</p>
+            <p class="instructions">
+                Scroll through deck and let your inuition choose a card and click to select it. Click the card again to confirm selection.
+            </p>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="resetBtn">Reset Selection</button>
+            <button class="btn" id="shuffleBtn">Shuffle Deck</button>
+        </div>
+        
+        <div class="deck-instructions" id="deckInstructions">Choose a card</div>
+        
+        <div class="deck-container">
+            <div class="deck" id="deck"></div>
+        </div>
+
+        <!-- Celtic Cross Spread -->
+        <div class="celtic-cross-container" id="celticCross">
+            <div class="celtic-position position-1" data-position="1">
+                <div class="position-name">Present</div>
+            </div>
+            <div class="celtic-position position-2" data-position="2">
+                <div class="position-name">Obstacles</div>
+            </div>
+            <div class="celtic-position position-3" data-position="3">
+                <div class="position-name">Crown</div>
+            </div>
+            <div class="celtic-position position-4" data-position="4">
+                <div class="position-name">Root</div>
+            </div>
+            <div class="celtic-position position-5" data-position="5">
+                <div class="position-name">Recent Past</div>
+            </div>
+            <div class="celtic-position position-6" data-position="6">
+                <div class="position-name">Near Future</div>
+            </div>
+            <div class="celtic-position position-7" data-position="7">
+                <div class="position-name">Your Approach</div>
+            </div>
+            <div class="celtic-position position-8" data-position="8">
+                <div class="position-name">Internal Influences</div>
+            </div>
+            <div class="celtic-position position-9" data-position="9">
+                <div class="position-name">External Influences</div>
+            </div>
+            <div class="celtic-position position-10" data-position="10">
+                <div class="position-name">Final Outcome</div>
+            </div>
+        </div>
+
+        <!-- Reading Section -->
+        <div class="reading-container" id="readingContainer">
+            <h2 class="reading-title">Your Celtic Cross Reading</h2>
+            <div id="readingText"></div>
+        </div>
+    </div>
+
+    <script>
+        const TarotApp = {
+            selectedCards: [],
+            cards: [],
+            isShuffling: false,
+            celticCrossCards: [],
+            
+            init() {
+                this.createDeck();
+                setTimeout(() => {
+                    const deck = document.getElementById('deck');
+                    const deckWidth = deck.scrollWidth;
+                    const containerWidth = deck.clientWidth;
+                    const scrollPosition = (deckWidth - containerWidth) / 2;
+                    deck.scrollLeft = scrollPosition;
+                }, 100);
+            },
+
+            createDeck() {
+                const deck = document.getElementById('deck');
+                deck.innerHTML = '';
+                this.cards = [];
+                this.selectedCards = [];
+                this.celticCrossCards = [];
+                
+                document.getElementById('readingContainer').style.display = 'none';
+                
+                for (let i = 1; i <= 78; i++) {
+                    const card = this.createCard(i);
+                    this.cards.push(card);
+                    deck.appendChild(card);
+                }
+            },
+
+            createCard(number) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.zIndex = number;
+                
+                const centerPoint = 39.5;
+                const maxRotation = 20;
+                const rotationFactor = (number - centerPoint) / centerPoint;
+                const rotation = rotationFactor * maxRotation;
+                
+                card.style.transform = `rotate(${rotation}deg)`;
+                card.style.setProperty('--rotation', `${rotation}deg`);
+                card.style.marginRight = '-95px';
+                card.dataset.number = number;
+                card.dataset.tarotCard = this.getTarotCardName(number);
+                
+                // Test with longer base64 for The Hierophant
+                if (card.dataset.tarotCard === "The Hierophant") {
+                    const base64Data = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEEsASwAAD/4QCARXhpZgAATU0AKgAAAAgABQESAAMAAAABAAEAAAAAAAEAAAABAAAASgEbAAUAAAABAAAAUgEoAAMAAAABAAIAAIdpAAQAAAABAAAAWgAAAAAAAASwAAAAAQAABLAAAAABAAKgAgAEAAAAAQAABaugAwAEAAAAAQAACcQAAAAA/+IFQElDQ19QUk9GSUxFAAEBAAAFMGFwcGwCIAAAbW50clJHQiBYWVogB9kAAgAZAAsAGgALYWNzcEFQUEwAAAAAYXBwbAAAAAAAAAAAAAAAAAAAAAAAAPbWAAEAAAAA0y1hcHBsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALZHNjbQAAAQgAAALyZGVzYwAAA/wAAABvZ1hZWgAABGwAAAAUd3RwdAAABIAAAAAUclhZWgAABJQAAAAUYlhZWgAABKgAAAAUclRSQwAABLwAAAAOY3BydAAABMwAAAA4Y2hhZAAABQQAAAAsZ1RSQwAABLwAAAAOYlRSQwAABLwAAAAObWx1YwAAAAAAAAARAAAADGVuVVMAAAAmAAACfmVzRVMAAAAmAAABgmRhREsAAAAuAAAB6mRlREUAAAAsAAABqGZpRkkAAAAoAAAA3GZyRlUAAAAoAAABKml0SVQAAAAoAAACVm5sTkwAAAAoAAACGG5iTk8AAAAmAAABBHB0QlIAAAAmAAABgnN2U0UAAAAmAAABBGphSlAAAAAaAAABUmtvS1IAAAAWAAACQHpoVFcAAAAWAAABbHpoQ04AAAAWAAAB1HJ1UlUAAAAiAAACpHBsUEwAAAAsAAACxgBZAGwAZQBpAG4AZQBuACAAUgBHAEIALQBwAHIAbwBmAGkAaQBsAGkARwBlAG4AZQByAGkAcwBrACAAUgBHAEIALQBwAHIAbwBmAGkAbABQAHIAbwBmAGkAbAAgAEcA6QBuAOkAcgBpAHEAdQBlACAAUgBWAEJOAIIsACAAUgBHAEIAIDDXMO0w1TChMKQw65AadSgAIABSAEcAQgAggnJfaWPPj/AAUABlAHIAZgBpAGwAIABSAEcAQgAgAEcAZQBuAOkAcgBpAGMAbwBBAGwAbABnAGUAbQBlAGkAbgBlAHMAIABSAEcAQgAtAFAAcgBvAGYAaQBsZm6QGgAgA";
+                    card.innerHTML = `<img src="${base64Data}" style="width: 100px; height: 160px; object-fit: cover; border-radius: 8px;" alt="The Hierophant">`;
+                    card.style.setProperty('--show-decorations', 'none');
+                } else {
+                    card.innerHTML = `<div class="card-number">${number}</div>`;
+                }
+                
+                card.addEventListener('click', () => this.selectCard(card));
+                return card;
+            },
+
+            getTarotCardName(number) {
+                const tarotCards = [
+                    "The Fool", "The Magician", "The High Priestess", "The Empress", "The Emperor",
+                    "The Hierophant", "The Lovers", "The Chariot", "Strength", "The Hermit",
+                    "Wheel of Fortune", "Justice", "The Hanged Man", "Death", "Temperance",
+                    "The Devil", "The Tower", "The Star", "The Moon", "The Sun",
+                    "Judgement", "The World",
+                    "Ace of Cups", "Two of Cups", "Three of Cups", "Four of Cups", "Five of Cups",
+                    "Six of Cups", "Seven of Cups", "Eight of Cups", "Nine of Cups", "Ten of Cups",
+                    "Page of Cups", "Knight of Cups", "Queen of Cups", "King of Cups",
+                    "Ace of Pentacles", "Two of Pentacles", "Three of Pentacles", "Four of Pentacles", "Five of Pentacles",
+                    "Six of Pentacles", "Seven of Pentacles", "Eight of Pentacles", "Nine of Pentacles", "Ten of Pentacles",
+                    "Page of Pentacles", "Knight of Pentacles", "Queen of Pentacles", "King of Pentacles",
+                    "Ace of Swords", "Two of Swords", "Three of Swords", "Four of Swords", "Five of Swords",
+                    "Six of Swords", "Seven of Swords", "Eight of Swords", "Nine of Swords", "Ten of Swords",
+                    "Page of Swords", "Knight of Swords", "Queen of Swords", "King of Swords",
+                    "Ace of Wands", "Two of Wands", "Three of Wands", "Four of Wands", "Five of Wands",
+                    "Six of Wands", "Seven of Wands", "Eight of Wands", "Nine of Wands", "Ten of Wands",
+                    "Page of Wands", "Knight of Wands", "Queen of Wands", "King of Wands"
+                ];
+                return tarotCards[number - 1] || `Card ${number}`;
+            },
+
+            getCardImageUrl(number) {
+                const baseUrl = "https://raw.githubusercontent.com/dejagwentendu/Tarot-Cards-public/main/";
+                
+                // Major Arcana (cards 1-22)
+                if (number <= 22) {
+                    const majorArcanaFiles = [
+                        "RWS_Tarot_00_Fool.jpg", "RWS_Tarot_01_Magician.jpg", "RWS_Tarot_02_High_Priestess.jpg",
+                        "RWS_Tarot_03_Empress.jpg", "RWS_Tarot_04_Emperor.jpg", "RWS_Tarot_05_Hierophant.jpg",
+                        "RWS_Tarot_06_Lovers.jpg", "RWS_Tarot_07_Chariot.jpg", "RWS_Tarot_08_Strength.jpg",
+                        "RWS_Tarot_09_Hermit.jpg", "RWS_Tarot_10_Wheel_of_Fortune.jpg", "RWS_Tarot_11_Justice.jpg",
+                        "RWS_Tarot_12_Hanged_Man.jpg", "RWS_Tarot_13_Death.jpg", "RWS_Tarot_14_Temperance.jpg",
+                        "RWS_Tarot_15_Devil.jpg", "RWS_Tarot_16_Tower.jpg", "RWS_Tarot_17_Star.jpg",
+                        "RWS_Tarot_18_Moon.jpg", "RWS_Tarot_19_Sun.jpg", "RWS_Tarot_20_Judgement.jpg",
+                        "RWS_Tarot_21_World.jpg"
+                    ];
+                    return baseUrl + majorArcanaFiles[number - 1];
+                }
+                
+                // Minor Arcana (cards 23-78)
+                const minorIndex = number - 23;
+                const suitIndex = Math.floor(minorIndex / 14);
+                const cardInSuit = (minorIndex % 14) + 1;
+                
+                const suits = ["Cups", "Pents", "Swords", "Wands"];
+                const suitName = suits[suitIndex];
+                
+                const cardNumber = cardInSuit.toString().padStart(2, '0');
+                return baseUrl + `${suitName}${cardNumber}.jpg`;
+            },
+
+            selectCard(card) {
+                if (this.isShuffling) return;
+                
+                const isSelected = this.selectedCards.includes(card);
+                
+                if (isSelected) {
+                    this.moveToCelticCross(card);
+                    card.classList.remove('selected');
+                    this.selectedCards 
